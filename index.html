@@ -1,0 +1,186 @@
+    
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validador de Contraseñas</title>
+    <style>
+    .strength-bar-container{width:100%;height:10px;background:#e3e8f0;border-radius:6px;margin:10px 0 5px 0;overflow:hidden;display:none}.strength-bar{height:100%;width:0;background:#e74c3c;border-radius:6px;transition:width .4s,background .4s}.weak{color:#e74c3c!important}.medium{color:#f1c40f!important}.strong{color:#27ae60!important}*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#1e3c72,#2a5298);height:100vh;display:flex;justify-content:center;align-items:center}.container{background:#fff;width:400px;max-width:90%;padding:36px 32px 32px 32px;border-radius:18px;box-shadow:0 8px 32px rgba(30,60,114,.13);text-align:center;border:1.5px solid #e3e8f0}.container h2{margin-bottom:22px;color:#2a5298;font-size:26px;letter-spacing:.5px;font-weight:700}.password-group{position:relative;width:100%;margin-bottom:10px}input[type=password],input[type=text]{width:100%;padding:12px 44px 12px 12px;border:2px solid #ddd;border-radius:8px;font-size:16px;outline:none;transition:.3s;background:#f8fafd;color:#222;box-shadow:0 2px 8px rgba(42,82,152,.05)}input[type=password]:focus,input[type=text]:focus{border-color:#2a5298;box-shadow:0 0 8px rgba(42,82,152,.18);background:#fff}.toggle-password{position:absolute;top:50%;right:14px;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:0;color:#888;font-size:20px;transition:color .2s;z-index:2}.toggle-password:hover{color:#2a5298}input[type=password]:focus{border-color:#2a5298;box-shadow:0 0 8px rgba(42,82,152,.3)}.result{margin-top:22px;font-weight:bold;font-size:18px;color:#2a5298;letter-spacing:.2px}.feedback{margin-top:15px;text-align:left}.feedback ul{list-style:none}.feedback li{padding:8px 12px;margin-bottom:8px;border-radius:6px;background:#f8fafd;color:#2a5298;border-left:4px solid #2a5298;font-size:15px}.entropy{margin-top:10px;font-size:14px;color:#555;text-align:left}
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+   
+
+    <div class="container">
+        <h2>Validador de Contraseña</h2>
+        <div class="password-group">
+            <input type="password" id="password" placeholder="Escribe tu contraseña">
+            <button type="button" class="toggle-password" id="togglePassword" aria-label="Mostrar/Ocultar contraseña">
+                <i class="fas fa-eye" id="eyeIcon"></i>
+            </button>
+        </div>
+        <div class="strength-bar-container" id="strengthBarContainer">
+            <div class="strength-bar" id="strengthBar"></div>
+        </div>
+        <div class="result" id="result"></div>
+        <div class="feedback">
+            <ul id="feedbackList"></ul>
+            <div class="entropy" id="entropyInfo"></div>
+        </div>
+    </div>
+
+    <!-- Eliminado script de kit, ya no es necesario -->
+    <script>
+        const passwordInput = document.getElementById('password');
+        const togglePassword = document.getElementById('togglePassword');
+        const eyeIcon = document.getElementById('eyeIcon');
+        togglePassword.addEventListener('click', function() {
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            eyeIcon.classList.toggle('fa-eye');
+            eyeIcon.classList.toggle('fa-eye-slash');
+            // Efecto visual al mostrar/ocultar
+            if (isPassword) {
+                togglePassword.style.color = '#1e90ff';
+            } else {
+                togglePassword.style.color = '';
+            }
+        });
+
+        // Interfaz pública del módulo
+        window.PasswordValidator = {
+            /**
+             * Evalúa la seguridad de una contraseña.
+             * @param {string} password
+             * @returns {{nivel: string, feedback: string[]}}
+             */
+            eval: function(password) {
+                let score = 0;
+                let feedback = [];
+                if (password.length >= 8) {
+                    score++;
+                } else {
+                    feedback.push("Debe tener al menos 8 caracteres");
+                }
+                if (/[A-Z]/.test(password)) {
+                    score++;
+                } else {
+                    feedback.push("Debe incluir una letra mayúscula");
+                }
+                if (/[0-9]/.test(password)) {
+                    score++;
+                } else {
+                    feedback.push("Debe incluir un número");
+                }
+                if (/[^A-Za-z0-9]/.test(password)) {
+                    score++;
+                } else {
+                    feedback.push("Debe incluir un símbolo");
+                }
+                let nivel = "";
+                if (score <= 1) nivel = "Débil";
+                else if (score <= 3) nivel = "Media";
+                else nivel = "Fuerte";
+                return { nivel, feedback };
+            }
+        };
+
+        // Uso interno para UI
+        function evaluarPassword(password) {
+            return window.PasswordValidator.eval(password);
+        }
+
+document.getElementById("password").addEventListener("input", function() {
+    const password = this.value;
+    const resultDiv = document.getElementById("result");
+    const feedbackList = document.getElementById("feedbackList");
+
+    const barContainer = document.getElementById("strengthBarContainer");
+    const bar = document.getElementById("strengthBar");
+    const entropyDiv = document.getElementById("entropyInfo");
+    if (password.trim() === "") {
+        resultDiv.textContent = "";
+        resultDiv.className = "result";
+        feedbackList.innerHTML = "";
+        entropyDiv.textContent = "";
+        barContainer.style.display = "none";
+        bar.style.width = "0%";
+        return;
+    }
+
+    const resultado = evaluarPassword(password);
+
+    // Mostrar barra de fuerza
+    barContainer.style.display = "block";
+    let barWidth = 0;
+    let barColor = "#e74c3c";
+    if (resultado.nivel === "Débil") {
+        barWidth = 33;
+        barColor = "#e74c3c";
+    } else if (resultado.nivel === "Media") {
+        barWidth = 66;
+        barColor = "#f1c40f";
+    } else if (resultado.nivel === "Fuerte") {
+        barWidth = 100;
+        barColor = "#27ae60";
+    }
+    bar.style.width = barWidth + "%";
+    bar.style.background = barColor;
+
+    // Mostrar nivel
+    resultDiv.textContent = "Nivel: " + resultado.nivel;
+    resultDiv.className = "result " + 
+        (resultado.nivel === "Débil" ? "weak" :
+        resultado.nivel === "Media" ? "medium" : "strong");
+
+    // Mostrar feedback
+    feedbackList.innerHTML = "";
+    let positiveMsg = "";
+    if (resultado.nivel === "Fuerte" && resultado.feedback.length === 0) {
+        positiveMsg = "¡Excelente! Tu contraseña es robusta y difícil de descifrar.";
+        if (password.length < 14) {
+            positiveMsg += " Si quieres máxima seguridad, puedes hacerla aún más larga.";
+        }
+        let li = document.createElement("li");
+        li.textContent = positiveMsg;
+        li.style.color = "#27ae60";
+        feedbackList.appendChild(li);
+    } else {
+        resultado.feedback.forEach(msg => {
+            let li = document.createElement("li");
+            li.textContent = msg;
+            feedbackList.appendChild(li);
+        });
+    }
+
+    // Entropía y tiempo de crackeo
+    function estimateEntropy(pw) {
+        let charset = 0;
+        if (/[a-z]/.test(pw)) charset += 26;
+        if (/[A-Z]/.test(pw)) charset += 26;
+        if (/[0-9]/.test(pw)) charset += 10;
+        if (/[^A-Za-z0-9]/.test(pw)) charset += 32;
+        if (charset === 0) return 0;
+        return Math.round(Math.log2(Math.pow(charset, pw.length)) * 10) / 10;
+    }
+    function estimateCrackTime(entropy) {
+        // Suponiendo 1e10 hashes/segundo (muy optimista)
+        if (entropy > 120) return "prácticamente imposible de crackear";
+        let guesses = Math.pow(2, entropy);
+        let seconds = guesses / 1e10;
+        let years = seconds / (60*60*24*365.25);
+        if (years > 1000000) return "más de un millón de años";
+        if (years > 10000) return Math.round(years/1000) + " mil años";
+        if (years > 1) return Math.round(years) + " años";
+        if (seconds > 3600) return Math.round(seconds/3600) + " horas";
+        if (seconds > 60) return Math.round(seconds/60) + " minutos";
+        return Math.round(seconds) + " segundos";
+    }
+    const entropy = estimateEntropy(password);
+    const crackTime = estimateCrackTime(entropy);
+    entropyDiv.textContent = `Entropía estimada: ${entropy} bits · Tiempo de crackeo: ${crackTime}`;
+});
+    </script>
+</body>
+</html>
