@@ -1,4 +1,14 @@
-    
+<!--
+Proyecto: Validador de Contraseñas Seguras
+Curso: Sistemas de Calidad en las TIC (03087)
+Trabajo: Proyecto No. 2
+Universidad: Universidad Estatal a Distancia (UNED)
+Autor: Paulo César Picado Calderón
+Periodo: I Cuatrimestre 2026
+
+Repositorio:
+https://github.com/PauloCR15/proyecto2-sistemas-calidad-password-validator
+-->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -29,8 +39,8 @@
             <div class="entropy" id="entropyInfo"></div>
         </div>
     </div>
-
-    <!-- Eliminado script de kit, ya no es necesario -->
+    
+    <!-- Lógica principal de validación -->
     <script>
         const passwordInput = document.getElementById('password');
         const togglePassword = document.getElementById('togglePassword');
@@ -165,7 +175,7 @@ document.getElementById("password").addEventListener("input", function() {
         return Math.round(Math.log2(Math.pow(charset, pw.length)) * 10) / 10;
     }
     function estimateCrackTime(entropy) {
-        // Suponiendo 1e10 hashes/segundo (muy optimista)
+        // Cálculo aproximado del tiempo necesario para descifrar la contraseña
         if (entropy > 120) return "prácticamente imposible de crackear";
         let guesses = Math.pow(2, entropy);
         let seconds = guesses / 1e10;
